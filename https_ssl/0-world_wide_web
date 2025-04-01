@@ -1,48 +1,14 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2086
-
-# Check if at least the domain is provided
-if [ $# -lt 1 ]; then
-  echo "Usage: $0 domain [subdomain]"
-  exit 1
-fi
-
-domain="$1"
-sub="$2"
-
-# Function that returns the IP for a given subdomain.
-get_ip() {
-  local subdomain="$1"
-  case "$subdomain" in
-    www|lb-01)
-      ip="54.145.77.250"
-      ;;
-    web-01)
-      ip="34.205.18.224"
-      ;;
-    web-02)
-      ip="44.204.39.103"
-      ;;
-    *)
-      ip=""
-      ;;
-  esac
-  # Use awk (even if trivial) to echo the IP address.
-  echo $ip | awk '{print $1}'
+# Output: The subdomain [SUB_DOMAIN] is a [RECORD_TYPE] record and points to [DESTINATION]
+print_domain_record () {
+    record_and_ip=$(dig "$2"."$1" | grep -A1 'ANSWER SECTION:' | tail -1 | awk '{print $4, $NF}')
+    echo "$2" $record_and_ip | awk '{print "The subdomain " $1 " is a " $2 " record and points to " $3}'
 }
 
-# Function to display the subdomain information.
-display_info() {
-  local subdomain="$1"
-  local ip=$(get_ip $subdomain)
-  echo "The subdomain ${subdomain} is a A record and points to ${ip}"
-}
-
-# If no specific subdomain is passed, display info for the default list.
-if [ -z "$sub" ]; then
-  for s in www lb-01 web-01 web-02; do
-    display_info $s
-  done
+if [ "$#" == 2 ]; then
+    print_domain_record "$1" "$2"
 else
-  display_info $sub
+    for sub in "www" "lb-01" "web-01" "web-02"; do
+        print_domain_record "$1" "$sub"
+    done
 fi
