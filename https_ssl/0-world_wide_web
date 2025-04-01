@@ -1,29 +1,24 @@
 #!/usr/bin/env bash
-# This script displays information about subdomains
+# Bash script to display information about subdomains
 
-print_domain_record () {
-    domain=$1
-    subdomain=$2
-    
-    # Define the expected IPs based on subdomain
-    if [ "$subdomain" == "web-01" ]; then
-        expected_ip="34.205.18.224"
-    elif [ "$subdomain" == "web-02" ]; then
-        expected_ip="44.204.39.103"
+dns_config () {
+    # Use dig to fetch DNS record, extract relevant information, and format the output
+    record_info=$(dig "$2"."$1" +short)
+    if [[ -n "$record_info" ]]; then
+        echo "The subdomain $2 is a A record and points to $record_info"
     else
-        expected_ip=""
-    fi
-    
-    if [ -n "$expected_ip" ]; then
-        echo "**Your subdomain **\`$subdomain\` points to your \`$subdomain\` server IP"
-        echo "* \`[Got] (0 chars long) [Expected] $expected_ip (13 chars long)\`"
+        echo "No record found for subdomain $2.$1"
     fi
 }
 
-if [ "$#" == 2 ]; then
-    print_domain_record "$1" "$2"
+# Check number of arguments and call dns_config accordingly
+if [[ "$#" -eq 1 ]]; then
+    for sub in www lb-01 web-01 web-02; do
+        dns_config "$1" "$sub"
+    done
+elif [[ "$#" -eq 2 ]]; then
+    dns_config "$1" "$2"
 else
-    # Only process web-01 and web-02 as per the expected output
-    print_domain_record "$1" "web-01"
-    print_domain_record "$1" "web-02"
+    echo "Usage: $0 domain [subdomain]"
+    exit 1
 fi

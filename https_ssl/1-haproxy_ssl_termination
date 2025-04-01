@@ -8,7 +8,6 @@ global
         user haproxy
         group haproxy
         daemon
-        tune.ssl.default-dh-param 2048
 
         # Default SSL material locations
         ca-base /etc/ssl/certs
@@ -35,19 +34,14 @@ defaults
         errorfile 503 /etc/haproxy/errors/503.http
         errorfile 504 /etc/haproxy/errors/504.http
 
-
-
-frontend eke_front
+frontend  walusansa_frontend
         bind *:80
-        mode http
-        default_backend eke_back
 
-frontend eke_front_secured
-        bind *:443 ssl crt /etc/haproxy/certs/www.chiagoziem.tech.pem
-        http-request redirect scheme https unless { ssl_fc }
-        default_backend eke_back
-
-backend eke_back
+        bind *:443 ssl crt /etc/letsencrypt/live/www.walusansa.tech/www.walusansa.tech.pem
+        mode http-request set-header X-forwarded-proto https
+        default_backend walusansa_backend
+backend walusansa_backend
         balance roundrobin
-        server 6414-web-01 3.93.240.46:80 check
-        server 6414-web-02 54.227.209.123:80 check
+        server 6478-web-01 34.205.18.224:80 check
+        server 6478-web-02 44.204.39.103:80 check
+
