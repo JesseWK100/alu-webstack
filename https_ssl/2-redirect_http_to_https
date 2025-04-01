@@ -7,6 +7,7 @@ global
         user haproxy
         group haproxy
         daemon
+        tune.ssl.default-dh-param 2048
 
         # Default SSL material locations
         ca-base /etc/ssl/certs
@@ -33,25 +34,19 @@ defaults
         errorfile 503 /etc/haproxy/errors/503.http
         errorfile 504 /etc/haproxy/errors/504.http
 
-frontend lb-frontend
+
+
+frontend eke_front
         bind *:80
-        bind *:443 ssl crt /etc/letsencrypt/live/www.yourgift.tech/joined.pem
         mode http
+        default_backend eke_back
 
-        # Define path for lets encrypt
-        acl is_letsencrypt path_beg -i /.well-known/acme-challenge/
-        # Redirect all requests on port 80(http) to 443(https)
-        # We only have one exception which is letsencrypt - because letsencrypt needs to hit us on port 80 to perform its job
-        redirect scheme https code 301 if !{ ssl_fc } !is_letsencrypt
+frontend eke_front_secured
+        bind *:443 ssl crt /etc/haproxy/certs/www.chiagoziem.tech.pem
+        http-request redirect scheme https code 301 unless { ssl_fc }
+        default_backend eke_back
 
-        use_backend letsencrypt if is_letsencrypt
-        default_backend lb-backend
-
-backend letsencrypt
-        server letsencrypt 127.0.0.1:8888
-
-        default_backend lb-backend
-backend lb-backend
+backend eke_back
         balance roundrobin
-        server 6462-web-01 3.89.108.224:80 check
-        server 6462-web-02 54.152.78.172:80 check
+        server 6414-web-01 3.93.240.46:80 check
+        server 6414-web-02 54.227.209.123:80 check
